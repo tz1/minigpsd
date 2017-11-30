@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Harley Instrument Cluster
+Type=Application
+Exec=/usr/bin/harleydash.py
+X-HildonDesk-ShowInToolbar=true
+X-Osso-Type=application/x-python

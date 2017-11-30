@@ -1,0 +1,9 @@
+1. Phase lock loop with the millisecond prefix to do close to real-time
+
+2. finer control over speed (with separate throttling - skip X every Y seconds or limit to one GPRMC) - faster or slower.
+
+3. reverse, and seek, dynamically through socket control from a GUI.
+
+4. Use directory scan to find and sort all the files within a directory for playback.
+
+5. Integrate unzip.

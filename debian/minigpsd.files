@@ -1,0 +1,17 @@
+etc/sudoers.d/l2ping.sudoers
+usr/bin/btconnect.sh
+usr/bin/miniobd2d
+usr/bin/gpsplayback
+usr/bin/minigpsd
+usr/bin/miniv1d
+usr/bin/obd2dash.py
+usr/bin/v1state.py
+usr/bin/kml2kmz
+usr/bin/harleydash.py
+usr/bin/setup-minigpsd
+usr/lib/hildon-desktop/minigpsd-sb.py
+usr/lib/hildon-desktop/minigpsd-tb.py
+usr/lib/python2.5/mgsetuplib.py
+usr/share/applications/hildon/setup-minigpsd.desktop
+usr/share/applications/hildon-status-bar/minigpsd-sb.desktop
+usr/share/applications/hildon-navigator/minigpsd-tb.desktop

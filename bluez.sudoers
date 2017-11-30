@@ -1,0 +1,2 @@
+user ALL = NOPASSWD: /usr/bin/l2ping *
+user ALL = NOPASSWD: /usr/bin/rfcomm *

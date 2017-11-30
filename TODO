@@ -1,0 +1,34 @@
+MINI6DOF
+GPSPLAYBACK
+document samples+utils
+
+add control for N810 internal exported to BT SDP
+Cleanup empty pre-lock files
+
+gconf cleanup (reset all to defaults, deb postinstall, post-remove)?
+
+Add "sensors" ?:
+        iwlist - poor man's kismet?
+        Batt level?
+
+/var/lib/gps/nvd_data
+
+Second/multiple BT GPS (for relative position)
+
+Clean and clarify text and formatting, Help screens
+Minimalist icon theme
+
+==================================================
+GPX file support?
+
+Post proc kmlset to telem - interpolate?
+
+User tweakable templates:
+kml (flyto?)
+web
+google map
+
+bt/ping starts/stops minigpsd?
+
+Time? Midnight bug?
+(this occured on my 5Hz garmin gps18 where the date will not have changed on the first few messages after midnight)

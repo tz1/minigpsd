@@ -1,0 +1,34 @@
+#!/usr/bin/env python
+
+import mgsetuplib
+import gtk
+
+try:
+    import hildon
+except ImportError:
+    hildon = None
+
+class setup_minigpsd(hildon.Program):
+    def __init__(self):
+        hildon.Program.__init__(self)
+    
+        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.connect("destroy", lambda wid: gtk.main_quit())
+        self.window.connect("delete_event", lambda a1,a2:gtk.main_quit())
+        self.window = hildon.Window()
+        self.window.connect("destroy", gtk.main_quit)
+        self.add_window(self.window)
+        self.window.set_title("Setup GPSD")
+        self.mgsetuplib = mgsetuplib.MGSetup()
+        self.window.add(self.mgsetuplib.setup(0))
+        self.window.set_menu(self.mgsetuplib.menu)
+        self.window.show()
+
+#------------------------------------------------------------------------
+    def run(self):
+        self.window.show_all()
+        gtk.main()
+
+if __name__ == "__main__":
+    app = setup_minigpsd()
+    app.run()

@@ -1,0 +1,111 @@
+#!/bin/sh
+update-sudoers
+
+exit 0
+#need to fix not overriding if already there
+
+key=/apps/maemo/minigpsd/GPSDPORT;val="2947"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSI;val="Internal"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSTHRU;val="22947"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/HTTPPORT;val="8888"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/KMLINTERVAL;val="5"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/MYNAME;val="MiniGPSD"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/OBDTHRU;val="22534"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/UNIXSOCK;val="/tmp/.gpsd_ctrl_sock"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/LOGDIR;val="/media/mmc1/minigpsd"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSdev;val="/dev/rfcomm0"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/OBDdev;val="/dev/rfcomm1"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/ICONUPDATE;val="3"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/USEOBD;val="0"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/USEGPS;val="0"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/UseGPSGate;val="0"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSGATEtcp;val="0"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/ICONUPDATE;val="3"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSGATEhost;val="online.gpsgate.com"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSGATEimei;val="enter_IMEI"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSGATEport;val="30175"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+
+key=/apps/maemo/minigpsd/GPSGATErate;val="10"
+if gconftool -g $key 2>&1 | grep No.val >/dev/null ; then
+    gconftool -t string -s $key "$val"
+fi
+

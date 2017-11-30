@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=MiniOBD2 Instrument Cluster
+Type=Application
+Exec=/usr/bin/obd2dash.py
+X-HildonDesk-ShowInToolbar=true
+X-Osso-Type=application/x-python

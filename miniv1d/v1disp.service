@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=v1disp
+Exec=/usr/bin/v1state.py

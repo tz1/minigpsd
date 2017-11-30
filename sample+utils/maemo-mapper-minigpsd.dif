@@ -1,0 +1,275 @@
+diff -Bbwur maemo-mapper-2.6.2.orig/src/gps.c maemo-mapper-2.6.2/src/gps.c
+--- maemo-mapper-2.6.2.orig/src/gps.c	2008-08-16 02:42:29.000000000 -0700
++++ maemo-mapper-2.6.2/src/gps.c	2009-06-05 18:51:47.000000000 -0700
+@@ -543,6 +543,99 @@
+     g_free(gri);
+ }
+ 
++#include <fcntl.h>
++#include <sys/mman.h>
++
++// data billboard
++struct satinfo {
++    // satellite number, elevation, azmuith, and signal
++    // satellite number is NEGATIVE if used
++    short num, el, az, sn;
++};
++        
++struct gpsstate {
++    // latitude, longitude in micro-degrees.  Altitude in feet * 1000
++    int llat, llon, alt;
++    // dilution of precision * 1000
++    int pdop, hdop, vdop;
++    // speed, mph * 1000, track, degrees * 1000
++    int gspd, gtrk;
++    // year (in century, 08 not 2008), month, day, hour, minute, second, thousanths
++    int yr, mo, dy, hr, mn, sc, scth;
++    // lock, 0-1.  fix from GPGSA
++    int lock, fix;
++    // -1 if device not connected
++    int gpsfd, obdfd;
++    // number of sats visible, number being used in fix
++    int nsats, nused;
++    // satellite table
++    struct satinfo sats[20];
++};
++
++int mgfile;
++struct gpsstate *mgdata;
++
++
++static gboolean poll_minigpsd()
++{
++    int i,j;
++    struct timeval tv;
++    struct tm *tmpt;
++
++    _gps.lat = (gdouble) mgdata->llat / 1000000.0;
++    _gps.lon = (gdouble) mgdata->llon / 1000000.0;
++
++    //    g_printerr( "%d %d\n", mgdata->llat, mgdata->llon );
++
++    gettimeofday(&tv, NULL);
++    tmpt = localtime(&tv.tv_sec);
++    _pos.time = mktime(tmpt);// + _gmtoffset;
++
++    /* Translate data into integers. */
++    latlon2unit(_gps.lat, _gps.lon, _pos.unitx, _pos.unity);
++
++    _pos.altitude = (double) mgdata->alt / 1000.0;
++            
++    _gps.pdop = (double) mgdata->pdop / 1000.0;
++    _gps.hdop = (double) mgdata->hdop / 1000.0;
++    _gps.vdop = (double) mgdata->vdop / 1000.0;
++#warning need to convert next to knots
++    _gps.speed = (double) mgdata->gspd / 1000.0;
++    _gps.heading = (double) mgdata->gtrk / 1000.0;
++    
++    //            _gps.lock=%d = mgdata->lock;
++    //    gint fixquality;
++    //    gfloat maxspeed;    /* in knots */
++    
++    if( _gps.fix > 1 && mgdata->fix < 2 )
++        set_conn_state(RCVR_UP);
++    if( _gps.fix < 2 && mgdata->fix > 1 )
++        set_conn_state(RCVR_FIXED);
++    
++    _gps.fix = mgdata->fix;
++            
++    // BT status    printf( mgdata->gpsfd, mgdata->obdfd
++    _gps.satinview = mgdata->nsats;
++    _gps.satinuse = mgdata->nused;
++    for (i = 0, j=0; i < mgdata->nsats; i++) {
++        if( mgdata->sats[i].num < 0 )
++            _gps.satforfix[j++] = -mgdata->sats[i].num;
++        _gps_sat[i].prn = abs(mgdata->sats[i].num);
++        _gps_sat[i].elevation = mgdata->sats[i].el;
++        _gps_sat[i].azimuth = mgdata->sats[i].az;
++        _gps_sat[i].snr = mgdata->sats[i].sn;
++    }
++
++    if(_gps_info)
++        gps_display_data();
++    if(_satdetails_on)
++        gps_display_details();
++
++    return TRUE;
++}
++
++
++
+ static void
+ thread_read_nmea(GpsRcvrInfo *gri)
+ {
+@@ -571,6 +664,19 @@
+     g_mutex_lock(_gps_init_mutex);
+     g_mutex_unlock(_gps_init_mutex);
+ 
++    mgfile = open("/tmp/mgpstate", O_RDONLY);
++    if( mgfile >= 0 ) {
++        mgdata = mmap(0, sizeof(struct gpsstate), PROT_READ, MAP_SHARED, mgfile, 0);
++        if( mgdata == NULL )
++            close(mgfile);
++        else {
++            g_printerr( "Found Minigpsd\n" );
++            g_timeout_add( 1000, poll_minigpsd, NULL );
++            sleep(36000);
++        }
++    }
++
++
+     switch(gri->type)
+     {
+ #ifdef HAVE_LIBGPSBT
+diff -Bbwur maemo-mapper-2.6.2.orig/src/main.c maemo-mapper-2.6.2/src/main.c
+--- maemo-mapper-2.6.2.orig/src/main.c	2009-03-08 19:23:10.000000000 -0700
++++ maemo-mapper-2.6.2/src/main.c	2009-06-05 07:02:51.000000000 -0700
+@@ -582,6 +582,14 @@
+         gchar *buffer;
+         gchar *file_uri;
+ 
++
++        if( read_path_from_kmz(&_route, argv[1])) {
++            path_save_route_to_db();
++            MACRO_BANNER_SHOW_INFO(_window, _("KMZ Read"));
++        }
++        else
++        {
++
+         /* Get the selected filename. */
+         file_uri = gnome_vfs_make_uri_from_shell_arg(argv[1]);
+ 
+@@ -607,6 +615,7 @@
+         }
+         g_free(file_uri);
+     }
++    }
+ 
+     /* If we have a route, calculate the next point. */
+     route_find_nearest_point();
+diff -Bbwur maemo-mapper-2.6.2.orig/src/menu.c maemo-mapper-2.6.2/src/menu.c
+--- maemo-mapper-2.6.2.orig/src/menu.c	2008-12-19 10:28:23.000000000 -0800
++++ maemo-mapper-2.6.2/src/menu.c	2009-06-05 18:51:52.000000000 -0700
+@@ -73,6 +73,15 @@
+     if(display_open_file(GTK_WINDOW(_window), &buffer, NULL, &size,
+                 &_route_dir_uri, NULL, GTK_FILE_CHOOSER_ACTION_OPEN))
+     {
++        if( read_path_from_kmz(&_route, _route_dir_uri) ) {
++            path_save_route_to_db();
++            cancel_autoroute();
++            route_find_nearest_point();
++            map_force_redraw();
++            MACRO_BANNER_SHOW_INFO(_window, _("Route Opened"));
++            return TRUE;
++        }
++
+         /* If auto is enabled, append the route, otherwise replace it. */
+         if(gpx_path_parse(&_route, buffer, size,
+                     _autoroute_data.enabled ? 0 : 1))
+@@ -194,6 +203,11 @@
+     if(display_open_file(GTK_WINDOW(_window), &buffer, NULL, &size,
+                 NULL, &_track_file_uri, GTK_FILE_CHOOSER_ACTION_OPEN))
+     {
++        if( read_path_from_kmz(&_track, _track_file_uri) ) {
++            map_force_redraw();
++            MACRO_BANNER_SHOW_INFO(_window, _("Track Opened"));
++            return TRUE;
++        }
+         if(gpx_path_parse(&_track, buffer, size, -1))
+         {
+             map_force_redraw();
+diff -Bbwur maemo-mapper-2.6.2.orig/src/path.c maemo-mapper-2.6.2/src/path.c
+--- maemo-mapper-2.6.2.orig/src/path.c	2009-03-08 15:06:20.000000000 -0700
++++ maemo-mapper-2.6.2/src/path.c	2009-06-05 19:31:25.000000000 -0700
+@@ -1813,3 +1813,91 @@
+ 
+     vprintf("%s(): return\n", __PRETTY_FUNCTION__);
+ }
++
++gboolean read_path_from_kmz(Path *path, char *filename)
++{
++    FILE *kmlinf;
++    int pid, pipefrom[2];
++    double la=0.0,lo=0.0;
++
++    printf("%s()\n", __PRETTY_FUNCTION__);
++
++        kmlinf = NULL;
++        if( !strncmp( filename, "file://", 7 ) )
++            filename += 7;
++        g_printerr( "File [%s]\n", filename );
++        if( strstr(filename, ".kml" ) )
++            kmlinf = fopen(filename, "r");
++        else if( strstr(filename, ".kmz" ) ) {
++            pipe(pipefrom);
++            pid = fork();
++            if (!pid) {
++                dup2(pipefrom[1], STDOUT_FILENO);
++                close(pipefrom[0]);
++                close(pipefrom[1]);
++                execlp("/usr/bin/unzip", "unzip", "-p", filename, NULL);
++                exit(-1);
++            }
++            close(pipefrom[1]);
++            kmlinf = fdopen( pipefrom[0], "r" );
++        }
++        if (kmlinf == NULL)
++            return FALSE;
++
++        MACRO_PATH_INIT(*path);
++
++        for (;;) {
++            char *c, buf[512], datestr[64];
++            if (feof(kmlinf))
++                break;
++
++            fgets( buf, 512, kmlinf );
++
++            if(( c = strstr( buf, "<TimeStamp><when>" ) )) {
++                c += 17;
++                strcpy( datestr, c );
++                c = strstr( datestr, "<" );
++                *c = 0;
++                //                printf( "\n", datestr );
++                continue;
++            }
++
++            if( !strchr( buf, '<' ) ) {
++                double la1,lo1;
++                gint x,y;
++
++                sscanf( buf, "%lf,%lf", &lo1, &la1 );
++                if( la1 == la && lo1 == lo )
++                    continue;
++                la = la1;
++                lo = lo1;
++
++                latlon2unit(la, lo, x, y);
++                MACRO_PATH_INCREMENT_TAIL(*path);
++                path->tail->unitx = x;
++                path->tail->unity = y;
++                _pos.unitx = x;
++                _pos.unity = y;
++                // later parse datestr;
++                if( !strlen(datestr) )
++                    ;
++                path->tail->time = 0;
++                path->tail->altitude = 0;
++            }
++
++        }
++        Point sel_unit;
++        latlon2unit(la, lo, sel_unit.unitx, sel_unit.unity);
++        map_center_unit(sel_unit);
++
++        fclose(kmlinf);
++
++    /* If the last point isn't null, then add another null point. */
++    if(path->tail->unity)
++    {
++        MACRO_PATH_INCREMENT_TAIL(*path);
++        *path->tail = _point_null;
++    }
++    vprintf("%s(): return\n", __PRETTY_FUNCTION__);
++    return TRUE;
++}

@@ -1,0 +1,259 @@
+#!/usr/bin/env python
+
+import pygtk
+import gtk
+import gobject
+#h import hildon
+#SB import hildondesktop
+import os
+import gconf
+
+
+#SB class statusbar_applet(hildondesktop.StatusbarItem):
+#h class statusbar_applet(hildon.Program):
+class statusbar_applet():
+    def __init__(self):
+#SB        hildondesktop.StatusbarItem.__init__(self)
+#h        hildon.Program.__init__(self)
+
+        self.button = gtk.Button()
+        self.button.set_image(gtk.image_new_from_stock(gtk.STOCK_YES, gtk.ICON_SIZE_MENU))
+        self.button.set_name("GET")
+        self.button.set_size_request(40,40)
+        self.button.connect("clicked",self.popup_menu)
+        self.create_menu()
+#SB        self.add(self.button)
+#SB        self.show_all()
+        gobject.timeout_add(100,self.timeout)
+
+        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.connect("destroy", lambda wid: gtk.main_quit())
+        self.window.connect("delete_event", lambda a1,a2:gtk.main_quit())
+        self.button.set_size_request(60,60)
+        
+#h        self.window = hildon.Window()
+#h        self.window.connect("destroy", gtk.main_quit)
+#h        self.add_window(self.window)
+
+        self.window.set_title("Setup GPSD")
+        self.button.show()
+        self.window.add(self.button)
+#h        self.window.set_menu(self.menu)
+        self.window.show()
+
+#####COMMON
+
+    def timeout(self):
+        self.button.set_image(gtk.image_new_from_file("/tmp/gps.xpm"))
+        gobject.timeout_add(3000,self.timeout)
+
+    def create_menu(self):
+    	self.menu = gtk.Menu()
+
+        menu_item = gtk.MenuItem("Start GPSD")
+        menu_item.connect('activate',self.startgpsd)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("Stop GPSD")
+        menu_item.connect('activate',self.stopgpsd)
+        self.menu.append(menu_item)
+#IF n810
+        menu_item = gtk.MenuItem("Internal GPS")
+        menu_item.connect('activate',self.internalgps)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("BT GPS")
+        menu_item.connect('activate',self.btgps)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("BT OBD")
+        menu_item.connect('activate',self.btobd)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("KML Interval")
+        menu_item.connect('activate',self.kmlinterval)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("KMZ Save Folder")
+        menu_item.connect('activate',self.kmldir)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("GPSGate URL")
+        menu_item.connect('activate',self.gpsgate)
+        self.menu.append(menu_item)
+
+        menu_item = gtk.MenuItem("Web Title")
+        menu_item.connect('activate',self.webtitle)
+        self.menu.append(menu_item)
+
+        self.menu.set_name("MiniGPS Configure")
+        self.menu.show_all()
+        
+    def popup_menu(self,widget,data=None):
+        self.menu.popup(None,None,self.menu_position,0,gtk.get_current_event_time())
+
+    def menu_position(self,data=None):
+        (reqw, reqh) = self.menu.get_size_request()
+        sw = self.button.get_screen().get_width()
+        (x,y) = self.button.get_parent_window().get_position()
+        y = y + self.button.get_allocation().y + self.button.get_allocation().height
+        x = x + self.button.get_allocation().x
+        greater = x + reqw
+        if (greater > sw) :
+            x = x - req.width - self.button.get_allocation().width;
+        return (x,y,True)
+
+    def startgpsd(self,widget,data=None):
+        os.system( "/usr/bin/minigpsd &" )
+
+    def stopgpsd(self,widget,data=None):
+        os.system( "killall minigpsd" )
+
+    def internalgps(self,widget,data=None):
+        if self.getyn("Use Internal N810 GPS?" ):
+            self.setgconf( "GPSI", "Internal" )
+        else:
+            self.setgconf( "GPSI", "OFF" )
+
+    def btgps(self,widget,data=None):
+#            self.setgconf( "GPSE", "/dev/ttyACM0" )
+#            self.setgconf( "GPSE", "@/var/lib/gps/gps_BT_devices" )
+#            self.setgconf( "GPSE", "BT:rfcomm0:11:22:33:44:55:66" )
+        t = self.getgconf( "GPSE" )
+        if t:
+            text = t
+        else:
+            text = "BT:rfcomm0:11:22:33:44:55:66 or /dev/ttyACM0 or @/v/l/g"
+        text = self.getstring("Bluetooth GPS Data:", text )
+        self.setgconf( "GPSE", text )
+    
+    def btobd(self,widget,data=None):
+#            self.setgconf( "OBD", "/dev/ttyACM0" )
+#            self.setgconf( "OBD", "BT:rfcomm1:11:22:33:44:55:66" )
+        t = self.getgconf( "OBD" )
+        if t:
+            text = t
+        else:
+            text = "BT:rfcomm1:11:22:33:44:55:66"
+        text = self.getstring("Bluetooth OBD data:", text )
+        self.setgconf( "OBD", text )
+    
+    def kmlinterval(self,widget,data=None):
+        t = self.getgconf( "KMLINTERVAL" )
+        if t:
+            val = int(t)
+        else:
+            val = 5
+        val = self.getnum("New KML every X minutes", val )
+        text = val.__str__()
+        print text
+        self.setgconf( "KMLINTERVAL", text )
+    
+    def webtitle(self,widget,data=None):
+        t = self.getgconf( "MYNAME" )
+        if t:
+            text = t
+        else:
+            text = "WebDefault"
+        text = self.getstring("Web Title", text )
+        print text
+        self.setgconf( "MYNAME", text )
+    
+    def kmldir(self,widget,data=None):
+        fcd = gtk.FileChooserDialog("Select Directory for KMZ",
+                                    None,
+                                    gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
+                                    (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                     gtk.STOCK_OPEN, gtk.RESPONSE_OK))
+        fcd.set_default_response(gtk.RESPONSE_OK)
+        t = self.getgconf( "LOGDIR" )
+        if t:
+            fcd.set_current_folder(t)
+        response = fcd.run()
+        if response == gtk.RESPONSE_OK:
+            self.setgconf( "LOGDIR", fcd.get_filename() )
+        fcd.destroy()  
+
+    def gpsgate(self,widget,data=None):
+        t = self.getgconf( "GPSGATE" )
+        if t:
+            text = t
+        else:
+            text = "online.gpsgate.com:30175/(IMEI)"
+        text = self.getstring("Web Title", text )
+        print text
+        self.setgconf( "GPSGATE", text )
+        
+    def setgconf( self, key, val ):
+        client = gconf.client_get_default()
+	path = '/apps/maemo/minigpsd/'
+        client.set_string(path + key, val )
+
+    def getgconf( self, key ):
+        client = gconf.client_get_default()
+	path = '/apps/maemo/minigpsd/'
+        return client.get_string(path + key)
+
+    def getstring(self,title,text):
+        dialog = gtk.MessageDialog(
+            None,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_QUESTION,
+            gtk.BUTTONS_OK_CANCEL,
+            None)
+        dialog.set_markup(title)
+        entry = gtk.Entry()
+        entry.set_text(text)
+        dialog.vbox.pack_end(entry, True, True, 0)
+        dialog.show_all()
+        
+        t = dialog.run()
+        if t == gtk.RESPONSE_OK:
+            text = entry.get_text()
+        dialog.destroy()
+        return text
+
+    def getnum(self,title,val):
+        dialog = gtk.MessageDialog(
+            None,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_QUESTION,
+            gtk.BUTTONS_OK_CANCEL,
+            None)
+        dialog.set_markup(title)
+        adj = gtk.Adjustment(val, 1, 60*24, 1, 30, 0)
+        spinner = gtk.SpinButton(adj, 0.0, 0)
+        dialog.vbox.pack_end(spinner, True, True, 0)
+        dialog.show_all()
+        
+        t = dialog.run()
+        if t == gtk.RESPONSE_OK:
+            val = spinner.get_value_as_int()
+        dialog.destroy()
+        return val
+
+    def getyn(self,title):
+        dialog = gtk.MessageDialog(
+            None,
+            gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
+            gtk.MESSAGE_QUESTION,
+            gtk.BUTTONS_YES_NO,
+            None)
+        dialog.set_markup(title)
+        dialog.show_all()
+        t = dialog.run()
+        dialog.destroy()
+        return t == gtk.RESPONSE_YES
+        
+#SB     def hd_plugin_get_objects():
+#SB         plugin = statusbar_applet()
+#SB         return [plugin]
+
+#------------------------------------------------------------------------
+    def run(self):
+        self.window.show_all()
+        gtk.main()
+
+if __name__ == "__main__":
+    app = statusbar_applet()
+    app.run()

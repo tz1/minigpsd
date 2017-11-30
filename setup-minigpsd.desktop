@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=MiniGPSD Setup
+Type=Application
+Exec=/usr/bin/setup-minigpsd
+X-HildonDesk-ShowInToolbar=true
+X-Osso-Type=application/x-python
+Icon=qgn_list_cp_location

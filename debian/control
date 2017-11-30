@@ -1,0 +1,20 @@
+Source: minigpsd
+Build-Depends: debhelper (>=4), libgconf2-dev (>= 2.6.4) 
+Priority: optional
+Section: user/navigation
+Maintainer: tz <tz1@mac.com>
+
+Depends: bluez-utils-test, python2.5-gtk2, python2.5-hildon, hildon-desktop-python-loader, python2.5-hildondesktop, python2.5-gnome, python2.5-gobject, python2.5-bluez, python2.5-dbus
+Package: minigpsd
+Section: user/navigation
+Priority: optional
+Architecture: any
+Description: Faster, more efficient gpsd replacement which includes support for logging to kml, gpsgate, extra (OBD2) data, integrated google maps and webpage or kml server, and simultaneous internal/bluetooth GPS.
+XB-Maemo-Icon-26:
+ iVBORw0KGgoAAAANSUhEUgAAABoAAAAaCAYAAACpSkzOAAAA8UlEQVRIid2WQQ6E
+ IAxFHxMPKSs8mqzwls4GRpAWFSdOMt2oSenz1/LFACsPxOsJCMCQ3Rs1az1QbRpr
+ Y8eGRsIxYJ/XAOqgHWS0IwAhBAC89wBMbirXKDAZlEESQIvZzyVQgdXDcAEiAfc1
+ ZFAn5AxMHO8eiAgTQWcn7EpkNStFd9SkkFQ95gyG5HVR5Lc6+JnwePmJ1wHbjtfC
+ OQeAtbZdOZSPjymqQIV3dcYSlgaobfV9kdUUW3dHlaSmBmVv0AMrILsO1Yo6YS0I
+ aP8jg0k7N8E0s6xapXzrzRmkM8NVm5AhJ84MaeG9w0lM+bdz3Rtj9FTrLKpN/QAA
+ AABJRU5ErkJggg==
